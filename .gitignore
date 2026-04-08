@@ -60,9 +60,11 @@ pnpm-debug.log*
 
 # ML / dataset artifacts
 Datasets/
+ml-model/data/
 ml-model/runs/
 ml-model/checkpoints/
 ml-model/outputs/
+backend/models/*.keras
 *.pt
 *.pth
 *.onnx

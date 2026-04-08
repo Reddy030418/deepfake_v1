@@ -10,6 +10,7 @@ class Settings:
         default_factory=lambda: os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
     )
     users_file: str = os.getenv("USERS_FILE", "./data/users.json")
+    model_path: str = os.getenv("MODEL_PATH", "./models/best_model.keras")
 
 
 settings = Settings()
