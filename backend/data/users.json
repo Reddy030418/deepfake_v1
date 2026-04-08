@@ -1,0 +1,16 @@
+[
+  {
+    "username": "demo_user",
+    "email": "demo@deepshield.ai",
+    "password_hash": "$2b$12$cky0yiGwHTiARSXeC5VG1.E9/AaP01P9XEDJFtZrOqnpJYSnwXxBW",
+    "approved": true,
+    "role": "user"
+  },
+  {
+    "username": "admin_user",
+    "email": "admin@deepshield.ai",
+    "password_hash": "$2b$12$Ns7nGBYKdxbvzypBN8KS3u6K/GElDEebHkvGQ36yq7lwWf6y/ShnO",
+    "approved": true,
+    "role": "admin"
+  }
+]

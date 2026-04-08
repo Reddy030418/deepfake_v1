@@ -1,0 +1,70 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment and secrets
+.env
+.env.*
+*.env
+credentials.txt
+
+# Logs
+*.log
+logs/
+
+# Build / package artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Node / frontend
+node_modules/
+.next/
+.nuxt/
+out/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Databases
+*.sqlite3
+*.db
+*.db-journal
+
+# ML / dataset artifacts
+Datasets/
+ml-model/runs/
+ml-model/checkpoints/
+ml-model/outputs/
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
