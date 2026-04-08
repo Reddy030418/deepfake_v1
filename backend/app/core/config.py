@@ -11,6 +11,7 @@ class Settings:
     )
     users_file: str = os.getenv("USERS_FILE", "./data/users.json")
     model_path: str = os.getenv("MODEL_PATH", "./models/best_model.keras")
+    deepfake_threshold: float = float(os.getenv("DEEPFAKE_THRESHOLD", "0.5"))
 
 
 settings = Settings()

@@ -33,14 +33,13 @@ def predict_deepfake_probability_from_bgr(image_bgr: np.ndarray) -> float:
     image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (IMG_SIZE, IMG_SIZE)).astype("float32")
     image = np.expand_dims(image, axis=0)
-    image = tf.keras.applications.mobilenet_v2.preprocess_input(image)
 
     model = _get_model()
     return float(model.predict(image, verbose=0)[0][0])
 
 
 def to_label_and_confidence(prob: float) -> tuple[str, float]:
-    label = "deepfake" if prob >= 0.5 else "authentic"
+    label = "deepfake" if prob >= settings.deepfake_threshold else "authentic"
     confidence = prob if label == "deepfake" else (1.0 - prob)
     return label, round(confidence, 4)
 

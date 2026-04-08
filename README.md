@@ -1,309 +1,157 @@
-﻿# DeepShield AI
+# DeepShield AI
 
-AI-powered web platform to detect manipulated images and videos.
+DeepShield AI is a full-stack deepfake detection project with:
+- React frontend (`frontend/`)
+- FastAPI backend (`backend/`)
+- TensorFlow training/inference pipeline (`ml-model/`)
 
-DeepShield AI provides:
-- Secure user authentication (signup/login with JWT)
-- Image deepfake detection
-- Video deepfake detection via frame sampling
-- Confidence-score based output for explainable decisions
-- Admin workflows for user approvals and dataset operations
+## What Works Now
 
-## Product Goals
+- Image prediction: real TensorFlow inference in backend
+- Video prediction: frame-sampling + TensorFlow inference in backend
+- Automated zip-based training pipeline: drop zip files, run one command, auto-pick best model, deploy to backend
 
-- Image inference latency: `< 3s` (target)
-- Video inference latency: `< 10s` (target)
-- Initial model accuracy: `>= 85%`
-- Target model accuracy: `>= 90%`
-
-## System Architecture
+## Repo Structure
 
 ```text
-Frontend (React + Vite)
-        |
-        v
-Backend API (FastAPI)
-        |
-        v
-ML Services (TensorFlow + OpenCV + NumPy)
-        |
-        v
-Storage (JSON now, DB-ready for PostgreSQL/MySQL)
+c:/Users/PC-4/Desktop/deepfake_v1/
+  backend/
+    app/
+    models/
+    requirements.txt
+    .env
+  frontend/
+  ml-model/
+    src/
+      train.py
+      auto_train_from_zips.py
+    requirements.txt
 ```
 
-## Monorepo Structure
+## 1) Backend Setup
 
-```text
-DeepShield-AI/
-├── backend/
-│   ├── .env.example
-│   ├── .venv/
-│   ├── Procfile
-│   ├── requirements.txt
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── core/
-│   │   │   ├── auth.py
-│   │   │   └── config.py
-│   │   ├── database/
-│   │   ├── models/
-│   │   │   └── user_store.py
-│   │   ├── routes/
-│   │   │   ├── auth.py
-│   │   │   ├── predict.py
-│   │   │   └── admin.py
-│   │   ├── schemas/
-│   │   │   ├── auth.py
-│   │   │   └── prediction.py
-│   │   ├── services/
-│   │   │   ├── user_service.py
-│   │   │   ├── model_service.py
-│   │   │   └── video_service.py
-│   │   └── utils/
-│   │       ├── file_handler.py
-│   │       └── preprocessing.py
-│   ├── data/
-│   │   └── users.json
-│   └── models/
-│
-├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── vercel.json
-│   ├── public/
-│   └── src/
-│       ├── main.jsx
-│       ├── App.jsx
-│       ├── styles.css
-│       ├── api/
-│       │   ├── client.js
-│       │   └── adminAuth.js
-│       ├── components/
-│       │   └── ProtectedRoute.jsx
-│       ├── context/
-│       │   └── AuthContext.jsx
-│       ├── pages/
-│       │   ├── HomePage.jsx
-│       │   ├── LoginPage.jsx
-│       │   ├── SignupPage.jsx
-│       │   ├── UserDashboardPage.jsx
-│       │   ├── ImageDetectionPage.jsx
-│       │   ├── VideoDetectionPage.jsx
-│       │   ├── AdminLoginPage.jsx
-│       │   ├── AdminDashboardPage.jsx
-│       │   ├── AdminAllUsersPage.jsx
-│       │   ├── AdminPendingUsersPage.jsx
-│       │   └── AdminUploadDatasetPage.jsx
-│       ├── templates/
-│       │   └── AuthTemplate.jsx
-│       └── utils/
-│           └── apiError.js
-└── ml-model/
-    └── (training pipeline in progress)
-```
-
-## Backend Overview (FastAPI)
-
-### Core Responsibilities
-- API surface for auth, predictions, and admin workflows
-- User state management (currently file-based JSON)
-- Model inference orchestration for image and video inputs
-- Validation and error handling with Pydantic schemas
-
-### Auth Design
-- Password protection: SHA256 pre-hashing + bcrypt
-- JWT-based access tokens for stateless sessions
-- Supports unrestricted password length/character sets
-
-### API Endpoints
-
-#### Auth
-- `POST /signup` - Register new user
-- `POST /login` - Authenticate user (`userid` + `password`)
-
-#### Prediction
-- `POST /predict` - Detect deepfakes from image/video upload
-
-#### Admin
-- `GET /admin/*` and `POST /admin/*` - User approvals, user management, dataset operations
-
-### Prediction Pipeline
-
-#### Image
-1. Receive uploaded image
-2. Preprocess image tensor
-3. Run TensorFlow inference
-4. Return prediction + confidence score (`0.0 - 1.0`)
-
-#### Video
-1. Receive uploaded video (MP4)
-2. Extract sampled frames (OpenCV)
-3. Batch infer sampled frames
-4. Aggregate frame predictions
-5. Return final label + confidence score
-
-## Frontend Overview (React + Vite)
-
-### Core Responsibilities
-- Route-based experience for public, user, and admin flows
-- JWT token/session handling with protected routes
-- Upload UX for image/video files
-- Prediction result visualization with confidence scores
-
-### Routing Model
-- Public: `/`, `/login`, `/signup`
-- User: `/app/*` (protected)
-- Admin: `/admin-ui/*` (protected)
-- Fallback: unknown routes redirect to home
-
-### Auth Flow
-1. User submits credentials
-2. Frontend calls backend auth endpoint
-3. JWT token returned on success
-4. Token persisted (localStorage)
-5. Protected routes unlocked via `AuthContext`
-
-### Detection Flow
-1. User selects file (image/video)
-2. Frontend uploads file to `POST /predict`
-3. Backend returns label + confidence score
-4. UI displays result and confidence state
-
-## API Contract (Example)
-
-### Request: `POST /predict`
-`multipart/form-data`
-- `file`: binary image or video
-
-### Success Response (example)
-```json
-{
-  "success": true,
-  "media_type": "image",
-  "prediction": "deepfake",
-  "confidence": 0.93,
-  "processing_time_ms": 1240
-}
-```
-
-### Error Response (example)
-```json
-{
-  "success": false,
-  "error": "Unsupported file format"
-}
-```
-
-## Environment Variables
-
-Create `backend/.env` from `.env.example`.
-
-Common keys:
-- `JWT_SECRET`
-- `JWT_ALGORITHM=HS256`
-- `ACCESS_TOKEN_EXPIRE_MINUTES=60`
-- `CORS_ORIGINS=http://localhost:5173`
-- `MODEL_PATH=./models/deepfake_model.h5`
-- `USERS_FILE=./data/users.json`
-
-## Local Development Setup
-
-## 1) Backend
-
-```bash
-cd backend
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
-
+```powershell
+cd C:\Users\PC-4\Desktop\deepfake_v1\backend
+py -m virtualenv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
+
+Create `backend/.env`:
+
+```env
+JWT_SECRET=change-this-to-a-long-random-secret
+JWT_ALGORITHM=HS256
+CORS_ORIGINS=http://localhost:5173
+USERS_FILE=./data/users.json
+MODEL_PATH=./models/best_model.keras
+DEEPFAKE_THRESHOLD=0.5
+```
+
+Run backend:
+
+```powershell
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend API docs:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+## 2) Frontend Setup
 
-## 2) Frontend
-
-```bash
-cd frontend
+```powershell
+cd C:\Users\PC-4\Desktop\deepfake_v1\frontend
 npm install
 npm run dev
 ```
 
-Frontend app:
-- `http://localhost:5173`
+Frontend URL: `http://localhost:5173`
 
-## 3) End-to-End Run
+## 3) ML Setup
 
-Run backend and frontend in separate terminals:
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:5173`
+```powershell
+cd C:\Users\PC-4\Desktop\deepfake_v1
+py -m virtualenv .venv-ml
+.\.venv-ml\Scripts\Activate.ps1
+pip install -r ml-model\requirements.txt
+```
 
-Ensure frontend API base URL points to backend host/port.
+## 4) Zip-Only Auto Training Flow (Recommended)
 
-## Demo Credentials (Development)
+### Step A: Put zip files here
 
-- User: `demo_user` / `Demo@1234`
-- Admin: `admin_user` / `Admin@1234`
+```text
+ml-model/data/_zips/
+  archive (1).zip
+  archive (2).zip
+  ...
+```
 
-## Deployment
+### Step B: Run one command
 
-### Backend (Heroku or Docker)
-- `Procfile` enables process startup for Heroku
-- Docker deployment supported for containerized environments
+```powershell
+cd C:\Users\PC-4\Desktop\deepfake_v1
+.\.venv-ml\Scripts\Activate.ps1
+python ml-model\src\auto_train_from_zips.py
+```
 
-### Frontend (Vercel or Static Hosting)
-- `vercel.json` provides rewrite/build configuration
-- Vite build output can be deployed to any static host
+### What this command does
 
-## Security Notes
+1. Extracts each zip to `ml-model/data/_raw/<dataset_name>/`
+2. Auto-maps labels by folder/file path keywords:
+   - `authentic, real, original, genuine` -> `authentic`
+   - `deepfake, fake, manipulated, forged, synthetic` -> `deepfake`
+3. Creates clean splits for each zip dataset:
+   - `train` (70%)
+   - `val` (15%)
+   - `test` (15%)
+4. Trains one model per zip using `ml-model/src/train.py`
+5. Compares runs by:
+   - highest `auc`
+   - then highest `accuracy`
+   - then lowest `loss`
+6. Copies winning model to:
+   - `backend/models/best_model.keras`
+7. Writes report:
+   - `ml-model/outputs/auto/auto_train_report.json`
 
-- Use strong `JWT_SECRET` in production
-- Move from JSON file storage to PostgreSQL/MySQL for production-scale deployments
-- Add rate limiting and upload size caps at API gateway/backend layer
-- Restrict CORS origins in production
-- Store secrets in platform secret manager
+## 5) Optional Training Args
 
-## Performance Strategy
+```powershell
+python ml-model\src\auto_train_from_zips.py --epochs 12 --fine-tune-epochs 5 --batch-size 32 --img-size 224
+```
 
-- Image path optimized for direct single-pass inference
-- Video path uses frame sampling to bound compute time
-- Batch frame inference reduces per-frame overhead
-- Confidence thresholds can be tuned for precision/recall tradeoffs
+Other useful args:
+- `--zip-dir` (default: `ml-model/data/_zips`)
+- `--outputs-root` (default: `ml-model/outputs/auto`)
+- `--backend-model-path` (default: `backend/models/best_model.keras`)
 
-## Testing Strategy
+## 6) After Training
 
-- Unit tests: auth, schemas, services
-- API integration tests: `/signup`, `/login`, `/predict`
-- Frontend tests: route guards, auth context, upload flows
-- ML validation: confusion matrix, precision/recall/F1, ROC-AUC
+Restart backend so it loads latest model:
 
-## Roadmap
+```powershell
+cd C:\Users\PC-4\Desktop\deepfake_v1\backend
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-- In progress: training pipeline hardening (`ml-model/`)
-- Planned: Grad-CAM explainability
-- Planned: persistent relational DB + inference history
-- Planned: model versioning + A/B evaluation
-- Planned: observability (structured logs, tracing, latency dashboards)
+## 7) If Predictions Look Wrong (All Authentic / All Deepfake)
 
-## PRD-to-Implementation Mapping
+1. Check backend is using correct model path in `.env`:
+   - `MODEL_PATH=./models/best_model.keras`
+2. Tune threshold:
+   - `DEEPFAKE_THRESHOLD=0.45` (more sensitive)
+   - `DEEPFAKE_THRESHOLD=0.55` (more strict)
+3. Confirm zip label folders contain both classes.
+4. Inspect `auto_train_report.json` metrics for weak runs.
 
-| PRD Feature | Status | Implementation |
-|---|---|---|
-| User signup/login | Done | Auth routes + JWT |
-| Image deepfake detection | Done | `/predict` + model service |
-| Video deepfake detection | Done | Frame sampling + aggregation |
-| Confidence score output | Done | Probability in JSON response |
-| Performance targets | Done (MVP target) | Optimized inference paths |
-| Explainability (Grad-CAM) | Planned | Future enhancement |
+## 8) Current Selection Rule
 
-## License
+The automation currently selects best run with:
+- `max(auc)` -> `max(accuracy)` -> `min(loss)`
 
-Proprietary (update as needed).
-#   d e e p f a k e _ v 1  
- 
+This is stored in report JSON for transparency.
+
+## 9) Notes
+
+- Do not commit raw datasets or model binaries.
+- Keep backend and ML virtual environments separate.
+- For reproducibility, avoid changing train/val/test logic between runs.
