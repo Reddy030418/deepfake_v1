@@ -21,10 +21,15 @@ async def predict(file: UploadFile = File(...)):
     started = perf_counter()
     raw = await file.read()
 
-    if media_type == "image":
-        label, confidence = predict_image(preprocess_image(raw))
-    else:
-        label, confidence = predict_video(raw)
+    try:
+        if media_type == "image":
+            label, confidence = predict_image(preprocess_image(raw))
+        else:
+            label, confidence = predict_video(raw)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (RuntimeError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     ms = int((perf_counter() - started) * 1000)
     return PredictionResponse(

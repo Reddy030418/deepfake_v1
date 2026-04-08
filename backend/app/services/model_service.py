@@ -2,7 +2,10 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import tensorflow as tf
+try:
+    import tensorflow as tf
+except ModuleNotFoundError:
+    tf = None
 
 from app.core.config import settings
 
@@ -19,6 +22,10 @@ def _resolve_model_path() -> Path:
 
 def _get_model():
     global _MODEL
+    if tf is None:
+        raise RuntimeError(
+            "TensorFlow is not installed. Install a compatible TensorFlow version for your Python runtime."
+        )
     if _MODEL is None:
         model_path = _resolve_model_path()
         if not model_path.exists():
