@@ -1,0 +1,42 @@
+{
+  "backbone": "resnet50",
+  "accuracy": 1.0,
+  "auc": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "specificity": 1.0,
+  "balanced_accuracy": 1.0,
+  "threshold": 0.57,
+  "threshold_source": "tuned_on_val_accuracy",
+  "confusion_matrix": [
+    [
+      89,
+      0
+    ],
+    [
+      0,
+      89
+    ]
+  ],
+  "roc_curve_points": [
+    {
+      "fpr": 0.0,
+      "tpr": 0.0
+    },
+    {
+      "fpr": 0.0,
+      "tpr": 0.011235955056179775
+    },
+    {
+      "fpr": 0.0,
+      "tpr": 1.0
+    },
+    {
+      "fpr": 1.0,
+      "tpr": 1.0
+    }
+  ],
+  "sample_count": 178,
+  "notes": "Computed on held-out test split."
+}

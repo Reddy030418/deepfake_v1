@@ -1,51 +1,42 @@
 # DeepShield AI
 
-DeepShield AI is a full-stack deepfake detection project with:
-- React frontend (`frontend/`)
-- FastAPI backend (`backend/`)
-- TensorFlow training/inference pipeline (`ml-model/`)
+DeepShield AI is a full-stack deepfake detection project:
+- `frontend/`: React + Vite UI
+- `backend/`: FastAPI APIs for auth, prediction, and metrics
+- `ml-model/`: TensorFlow training + chart/image generation scripts
 
-## What Works Now
-
-- Image prediction: real TensorFlow inference in backend
-- Video prediction: frame-sampling + TensorFlow inference in backend
-- Automated zip-based training pipeline: drop zip files, run one command, auto-pick best model, deploy to backend
-
-## Repo Structure
+## Project Structure
 
 ```text
-c:/Users/PC-4/Desktop/deepfake_v1/
+C:\FINAL
   backend/
-    app/
-    models/
-    requirements.txt
-    .env
   frontend/
   ml-model/
-    src/
-      train.py
-      auto_train_from_zips.py
-    requirements.txt
+  PRD.md
+  Q&A.md
 ```
 
-## 1) Backend Setup
+## 1) Backend Setup (FastAPI)
 
 ```powershell
-cd C:\Users\PC-4\Desktop\deepfake_v1\backend
-py -m virtualenv .venv
+cd C:\FINAL\backend
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-Create `backend/.env`:
+Create `backend/.env` (if missing):
 
 ```env
-JWT_SECRET=change-this-to-a-long-random-secret
+JWT_SECRET=change-this-secret
 JWT_ALGORITHM=HS256
 CORS_ORIGINS=http://localhost:5173
 USERS_FILE=./data/users.json
 MODEL_PATH=./models/best_model.keras
+MODEL_METRICS_PATH=./models/metrics.json
+MODEL_COMPARISON_PATH=./models/model_comparison.json
 DEEPFAKE_THRESHOLD=0.5
+DEMO_DASHBOARD_MODE=false
 ```
 
 Run backend:
@@ -54,104 +45,152 @@ Run backend:
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 2) Frontend Setup
+Useful URLs:
+- API docs: `http://localhost:8000/docs`
+- Health: `http://localhost:8000/health`
+
+## 2) Frontend Setup (React + Vite)
 
 ```powershell
-cd C:\Users\PC-4\Desktop\deepfake_v1\frontend
+cd C:\FINAL\frontend
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-Frontend URL: `http://localhost:5173`
+Frontend URL:
+- `http://localhost:5173`
 
-## 3) ML Setup
+## 3) ML Environment Setup
 
 ```powershell
-cd C:\Users\PC-4\Desktop\deepfake_v1
-py -m virtualenv .venv-ml
+cd C:\FINAL
+python -m venv .venv-ml
 .\.venv-ml\Scripts\Activate.ps1
 pip install -r ml-model\requirements.txt
 ```
 
-## 4) Zip-Only Auto Training Flow (Recommended)
+## 4) Train a Model (Basic)
 
-### Step A: Put zip files here
+Expected dataset layout:
+
+```text
+ml-model/data/
+  train/
+    authentic/
+    deepfake/
+  val/
+    authentic/
+    deepfake/
+```
+
+Train:
+
+```powershell
+python ml-model\src\train.py --data-dir ml-model\data --output-dir ml-model\outputs\run1 --epochs 10 --batch-size 32 --img-size 224
+```
+
+## 5) Auto Train from Zip Files
+
+Put dataset zips in:
 
 ```text
 ml-model/data/_zips/
-  archive (1).zip
-  archive (2).zip
-  ...
 ```
 
-### Step B: Run one command
+Run:
 
 ```powershell
-cd C:\Users\PC-4\Desktop\deepfake_v1
-.\.venv-ml\Scripts\Activate.ps1
 python ml-model\src\auto_train_from_zips.py
 ```
 
-### What this command does
+This pipeline:
+- Extracts zips
+- Auto-maps labels (`authentic` / `deepfake`)
+- Creates train/val/test splits
+- Trains and compares runs
+- Deploys winner to `backend/models/best_model.keras`
+- Writes `ml-model/outputs/auto/auto_train_report.json`
 
-1. Extracts each zip to `ml-model/data/_raw/<dataset_name>/`
-2. Auto-maps labels by folder/file path keywords:
-   - `authentic, real, original, genuine` -> `authentic`
-   - `deepfake, fake, manipulated, forged, synthetic` -> `deepfake`
-3. Creates clean splits for each zip dataset:
-   - `train` (70%)
-   - `val` (15%)
-   - `test` (15%)
-4. Trains one model per zip using `ml-model/src/train.py`
-5. Compares runs by:
-   - highest `auc`
-   - then highest `accuracy`
-   - then lowest `loss`
-6. Copies winning model to:
-   - `backend/models/best_model.keras`
-7. Writes report:
-   - `ml-model/outputs/auto/auto_train_report.json`
+## 6) 3-Model Comparison Suite
 
-## 5) Optional Training Args
+Run:
 
 ```powershell
-python ml-model\src\auto_train_from_zips.py --epochs 12 --fine-tune-epochs 5 --batch-size 32 --img-size 224
+python ml-model\src\train_model_suite.py --source-raw-dir ml-model\data\_raw --prepared-dir ml-model\data\suite_subset --max-per-class 3000 --split-strategy group --epochs 24 --fine-tune-epochs 8 --batch-size 16 --backbones efficientnetb0,resnet50,xception --threshold-metric accuracy --monitor-metric val_auc
 ```
 
-Other useful args:
-- `--zip-dir` (default: `ml-model/data/_zips`)
-- `--outputs-root` (default: `ml-model/outputs/auto`)
-- `--backend-model-path` (default: `backend/models/best_model.keras`)
+Outputs:
+- `backend/models/best_model.keras`
+- `backend/models/metrics.json`
+- `backend/models/model_comparison.json`
 
-## 6) After Training
+## 7) Generate Review Charts (Image Models)
 
-Restart backend so it loads latest model:
+Generate full image metrics chart set:
 
 ```powershell
-cd C:\Users\PC-4\Desktop\deepfake_v1\backend
-.\.venv\Scripts\Activate.ps1
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python ml-model\src\generate_review_images.py
 ```
 
-## 7) If Predictions Look Wrong (All Authentic / All Deepfake)
+Key outputs in `ml-model/outputs/review_images/`:
+- `confusion_matrix.png`
+- `f1_score.png`
+- `precision_score.png`
+- `recall_score.png`
+- `accuracy_score.png`
+- `accuracy_comparison_image_models.png`
+- `roc_curve_resnet50.png`
 
-1. Check backend is using correct model path in `.env`:
-   - `MODEL_PATH=./models/best_model.keras`
-2. Tune threshold:
-   - `DEEPFAKE_THRESHOLD=0.45` (more sensitive)
-   - `DEEPFAKE_THRESHOLD=0.55` (more strict)
-3. Confirm zip label folders contain both classes.
-4. Inspect `auto_train_report.json` metrics for weak runs.
+## 8) Generate Review Charts (Video Models)
 
-## 8) Current Selection Rule
+Generate video chart set (files include your video name):
 
-The automation currently selects best run with:
-- `max(auc)` -> `max(accuracy)` -> `min(loss)`
+```powershell
+python ml-model\src\generate_video_review_images.py --video-name sample_video_01
+```
 
-This is stored in report JSON for transparency.
+Key outputs in:
+- `ml-model/outputs/review_images/videos/sample_video_01/`
 
-## 9) Notes
+Includes:
+- `..._video_confusion_matrix.png`
+- `..._video_f1_score.png`
+- `..._video_accuracy_score.png`
+- `..._video_accuracy_comparison_video_models.png`
+- `..._video_roc_curve_resnet50.png`
 
-- Do not commit raw datasets or model binaries.
-- Keep backend and ML virtual environments separate.
-- For reproducibility, avoid changing train/val/test logic between runs.
+## 9) Generate Figure 5.9 (Image vs Video Accuracy)
+
+```powershell
+python ml-model\src\generate_figure_5_9_accuracy_comparison.py
+```
+
+Output:
+- `ml-model/outputs/review_images/figure_5_9_accuracy_comparison_image_vs_video.png`
+
+## 10) Main API Endpoints
+
+- `POST /signup`
+- `POST /login`
+- `POST /predict`
+- `GET /model-metrics`
+- `GET /model-comparison`
+- `GET /admin/users`
+- `GET /admin/pending`
+
+## 11) Troubleshooting
+
+- If frontend shows blank page:
+  - Remove Vite cache and reinstall:
+    ```powershell
+    cd C:\FINAL\frontend
+    if (Test-Path node_modules\.vite) { Remove-Item -Recurse -Force node_modules\.vite }
+    npm install
+    npm run dev
+    ```
+- If `/predict` returns 500:
+  - Check `MODEL_PATH` exists and points to a valid `.keras` file.
+  - Confirm TensorFlow version is compatible with saved model format.
+- If login fails with invalid credentials:
+  - Check `backend/data/users.json` and password hashing compatibility in `backend/app/core/auth.py`.
+

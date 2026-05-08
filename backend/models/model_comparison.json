@@ -1,0 +1,58 @@
+{
+  "target_accuracy": 0.9,
+  "winner_model": "resnet50",
+  "winner_status": "Excellent (90%+)",
+  "winner_accuracy": 1.0,
+  "recommendations": [
+    "Target reached: keep this model and monitor with unseen production-like data.",
+    "Add hard negatives (challenging real images) to improve robustness.",
+    "Use threshold tuning for your deployment risk preference."
+  ],
+  "top_models": [
+    {
+      "rank": 1,
+      "model": "resnet50",
+      "accuracy": 1.0,
+      "f1": 1.0,
+      "auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "specificity": 1.0,
+      "balanced_accuracy": 1.0,
+      "threshold": 0.57,
+      "threshold_source": "tuned_on_val_accuracy",
+      "status": "Excellent (90%+)",
+      "samples": 178
+    },
+    {
+      "rank": 2,
+      "model": "xception",
+      "accuracy": 0.9943820224719101,
+      "f1": 0.994413407821229,
+      "auc": 1.0,
+      "precision": 0.9888888888888889,
+      "recall": 1.0,
+      "specificity": 0.9887640449438202,
+      "balanced_accuracy": 0.9943820224719101,
+      "threshold": 0.4,
+      "threshold_source": "tuned_on_val_accuracy",
+      "status": "Excellent (90%+)",
+      "samples": 178
+    },
+    {
+      "rank": 3,
+      "model": "efficientnetb0",
+      "accuracy": 0.9662921348314607,
+      "f1": 0.9666666666666667,
+      "auc": 0.9939401590708243,
+      "precision": 0.9560439560439561,
+      "recall": 0.9775280898876404,
+      "specificity": 0.9550561797752809,
+      "balanced_accuracy": 0.9662921348314606,
+      "threshold": 0.46,
+      "threshold_source": "tuned_on_val_accuracy",
+      "status": "Excellent (90%+)",
+      "samples": 178
+    }
+  ]
+}
